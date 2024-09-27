@@ -6,6 +6,7 @@ from server import db, bcrypt
 from iso639 import Lang
 from datetime import datetime
 from gtts import gTTS
+from sqlalchemy import desc
 from deep_translator import GoogleTranslator
 from lingua import LanguageDetectorBuilder
 from flask import request, session, jsonify, send_file, Blueprint
@@ -59,7 +60,6 @@ EVALUATOR = Evaluator()
 AVAILABLE_TOOLS = {
     'get_context_from_page': AssistantUtils.get_page_context
 }
-
 
 @users.route('/register',methods=['POST'])
 @cross_origin(supports_credentials=True)
@@ -217,12 +217,21 @@ def getuser():
             ongoing_modules.append(temp)
             
 
-        
+    print("ALL ON GOING MODULES", all_ongoing_modules_names)  
     query_message = ""
     user_queries = user.user_query_association   
-    recommended_modules = RECOMMENDATION_GENERATOR.generate_recommendations(user_course, user_interest, all_ongoing_modules_names) 
-    print(recommended_modules)    
-    return jsonify({"message": "User found", "query_message":query_message,"recommended_topics":recommended_modules,"user_ongoing_modules":ongoing_modules, "user_completed_module":completed_modules, "response":True}), 200
+    if user_queries is None:
+        query_message = "You have not searched for any topic yet. Please search for a topic to get recommendations."
+        recommended_modules = RECOMMENDATION_GENERATOR.generate_recommendations_with_interests(user_course, user_interest, all_ongoing_modules_names) 
+
+        return jsonify({"message": "User found", "query_message":query_message,"recommended_topics":recommended_modules, "user_ongoing_modules":ongoing_modules, "user_completed_module":completed_modules, "response":True}), 200
+    else:
+        latest_query = Query.query.filter_by(user_id=user_id).order_by(desc(Query.date_search)).first() 
+        base_module = Module.query.filter_by(topic_id=latest_query.topic_id).first()
+        print("Module Name:", base_module.module_name)
+        print("Module Summary:", base_module.summary)
+        recommended_modules = RECOMMENDATION_GENERATOR.generate_recommendations_with_summary(base_module.summary)
+        return jsonify({"message": "User found", "query_message":query_message,"recommended_topics":recommended_modules, "user_ongoing_modules":ongoing_modules, "user_completed_module":completed_modules, "response":True}), 200
 
 # logout route
 @users.route('/logout', methods=['GET'])
