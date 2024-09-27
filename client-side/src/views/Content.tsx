@@ -344,7 +344,7 @@ const ContentSec = ({ subject, isLoading, images, index, data_len, quiz, quiz2, 
             </audio>
           ) : null}
           {/* <Text textAlign="justify" className='content' mb={10} fontSize={"xl"} overflowWrap="break-word">{subject.content}</Text> */}
-          <TypingContentAnimation text={subject.content} />
+          <TypingContentAnimation text={subject.content.replace(/\*/g, '')} />
           <Center>
             <Slideshow images={firstHalf} />
           </Center>
@@ -354,7 +354,7 @@ const ContentSec = ({ subject, isLoading, images, index, data_len, quiz, quiz2, 
                 <TypingHeadingAnimation text={section.title} />
                 {/* <Text fontSize="3xl" className='feature-heading' mb={2}><b>{section.title}</b></Text>
                 <Text className='content' fontSize={"lg"} textAlign="justify" overflowWrap="break-word">{section.content}</Text> */}
-                <TypingContentAnimation text={section.content} />
+                <TypingContentAnimation text={section.content.replace(/\*/g, '')} />
               </Box>
             ))}
             <Center>
@@ -365,7 +365,7 @@ const ContentSec = ({ subject, isLoading, images, index, data_len, quiz, quiz2, 
                 <TypingHeadingAnimation text={section.title} />
                 {/* <Text fontSize="3xl" className='feature-heading' mb={2}><b>{section.title}</b></Text>
                 <Text className='content' fontSize={"lg"} textAlign="justify" overflowWrap="break-word">{section.content}</Text> */}
-                <TypingContentAnimation text={section.content} />
+                <TypingContentAnimation text={section.content.replace(/\*/g, '')} />
               </Box>
             ))}
           </VStack>

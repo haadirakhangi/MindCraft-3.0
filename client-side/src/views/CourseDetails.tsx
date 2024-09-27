@@ -262,7 +262,7 @@ export default function Simple() {
                                 lineHeight={1.1}
                                 fontWeight={600}
                                 fontSize={{ base: '2xl', sm: '4xl', lg: '5xl' }}>
-                                Course Overview of {moduleData.module_name}:
+                                Course Overview: {moduleData.module_name}
                             </Heading>
                         </Box>
 

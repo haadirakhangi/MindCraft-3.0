@@ -489,10 +489,12 @@ def personalized_module_content():
         keys_list = list(submodules.keys())
         future_images_list = executor.submit(SerperProvider.module_image_from_web, submodules)
         future_video_list = executor.submit(SerperProvider.module_videos_from_web, submodules)
-        submodules_split_one = {key: submodules[key] for key in keys_list[:3]}
-        submodules_split_two = {key: submodules[key] for key in keys_list[3:]}
+        submodules_split_one = {key: submodules[key] for key in keys_list[:2]}
+        submodules_split_two = {key: submodules[key] for key in keys_list[2:4]}
+        submodules_split_three = {key: submodules[key] for key in keys_list[4:]}
         future_content_one = executor.submit(ContentGenerator().generate_content_from_textbook,title ,submodules_split_one,description,VECTORDB_TEXTBOOK,'first')
         future_content_two = executor.submit(ContentGenerator().generate_content_from_textbook,title ,submodules_split_two,description,VECTORDB_TEXTBOOK,'second')
+        future_content_two = executor.submit(ContentGenerator().generate_content_from_textbook,title ,submodules_split_three,description,VECTORDB_TEXTBOOK,'second')
 
     # Retrieve the results when both functions are done
     content_one = future_content_one.result()
@@ -647,10 +649,12 @@ def course_overview(module_id, source_language, websearch):
             keys_list = list(submodules.keys())
             future_images_list = executor.submit(SerperProvider.module_image_from_web, submodules)
             future_video_list = executor.submit(SerperProvider.module_videos_from_web, submodules)
-            submodules_split_one = {key: submodules[key] for key in keys_list[:3]}
-            submodules_split_two = {key: submodules[key] for key in keys_list[3:]}
+            submodules_split_one = {key: submodules[key] for key in keys_list[:2]}
+            submodules_split_two = {key: submodules[key] for key in keys_list[2:4]}
+            submodules_split_three = {key: submodules[key] for key in keys_list[4:]}
             future_content_one = executor.submit(CONTENT_GENERATOR.generate_content_from_web, submodules_split_one, module.module_name, 'first')
             future_content_two = executor.submit(CONTENT_GENERATOR.generate_content_from_web, submodules_split_two, module.module_name, 'second')
+            future_content_three = executor.submit(CONTENT_GENERATOR.generate_content_from_web, submodules_split_three, module.module_name, 'third')
 
         else:
             submodules = SUB_MODULE_GENERATOR.generate_submodules(module.module_name)
@@ -658,16 +662,19 @@ def course_overview(module_id, source_language, websearch):
             keys_list = list(submodules.keys())
             future_images_list = executor.submit(SerperProvider.module_image_from_web, submodules)
             future_video_list = executor.submit(SerperProvider.module_videos_from_web, submodules)
-            submodules_split_one = {key: submodules[key] for key in keys_list[:3]}
-            submodules_split_two = {key: submodules[key] for key in keys_list[3:]}
+            submodules_split_one = {key: submodules[key] for key in keys_list[:2]}
+            submodules_split_two = {key: submodules[key] for key in keys_list[2:4]}
+            submodules_split_three = {key: submodules[key] for key in keys_list[4:]}
             future_content_one = executor.submit(CONTENT_GENERATOR.generate_content, submodules_split_one, module.module_name,'first')
             future_content_two = executor.submit(CONTENT_GENERATOR.generate_content, submodules_split_two, module.module_name,'second')
+            future_content_three = executor.submit(CONTENT_GENERATOR.generate_content, submodules_split_three, module.module_name,'third')
 
     # Retrieve the results when both functions are done
     content_one = future_content_one.result()
     content_two = future_content_two.result()
+    content_three = future_content_three.result()
 
-    content = content_one + content_two
+    content = content_one + content_two + content_three
     images_list = future_images_list.result()
     video_list = future_video_list.result()
 

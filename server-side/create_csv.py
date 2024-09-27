@@ -8,10 +8,6 @@ with app.app_context():
     current_dir = os.path.dirname(__file__)
     print('------------------------',current_dir)
     data_dir = os.path.join(current_dir, 'core','recommendation_data', 'modules.csv')
-    # if os.path.exists(data_dir):
-    #     os.remove(data_dir)
-    #     print("OG DELETED\n\n\n")
-    # os.makedirs(os.path.dirname(data_dir))
     print("new csv created------------------------------\n\n\n\n")
     all_modules = Module.query.all()
     with open(data_dir, "w", newline="", encoding="utf-8") as modules_csv:

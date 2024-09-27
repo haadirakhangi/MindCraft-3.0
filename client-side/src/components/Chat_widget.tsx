@@ -71,7 +71,7 @@ const ChatWidget: React.FC = () => {
         { role: 'chatbot', message: chatbotResponse },
       ];
       setChatHistory(newChatHistoryWithResponse);
-      speak(data.chatbotResponse, "en-US", 2)
+      speak(data.chatbotResponse.replace(/\#/g, ''), "en-US", 2)
     } catch (error) {
       console.error('Error fetching chatbot response:', error);
     } finally {
@@ -174,7 +174,7 @@ const ChatWidget: React.FC = () => {
                 ) : (
                   <div>
                     <strong>Chatbot:</strong><br></br>
-                    {parseMessage(item.message)}
+                    {parseMessage(item.message.replace(/\#/g, ''))}
                   </div>
                 )}
               </div>

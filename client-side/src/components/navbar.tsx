@@ -103,18 +103,6 @@ export default function Nav() {
                     <FontAwesomeIcon style={{ marginRight: "6px", marginBottom: "1px" }} icon={faRobot} />
                     ISSAC
                   </Box>
-                  <Box
-                    as="a"
-                    px={2} py={1} borderRadius={'md'} fontSize={18} rounded={'md'} _hover={{ textDecoration: 'none', transform: "scale(1.05)", color: 'white', bg: useColorModeValue('purple.500', 'purple.600'), }} transition="transform 0.3s" _active={{ bg: 'purple.500' }} href={'/trending'}
-                    bg={location.pathname === '/trending' ? useColorModeValue('purple.600', 'purple.600') : ''}
-                    color={location.pathname === '/trending' ? 'white' : ''}
-                  >
-                    <HStack spacing={2}>
-                      <BsFire size={24} />
-                      <span>Trending</span>
-                    </HStack>
-                  </Box>
-                  
                 </>
               )}
               {!authenticated && ( // Conditionally render Sign Up and Sign In buttons when not logged in
