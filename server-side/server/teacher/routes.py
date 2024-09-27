@@ -9,7 +9,7 @@ from gtts import gTTS
 from deep_translator import GoogleTranslator
 from lingua import LanguageDetectorBuilder
 from flask import request, session, jsonify, send_file, Blueprint
-from models.database_model import User, Topic, Module, CompletedModule, Query, OngoingModule
+from models.database_model import User, Topic, Module, CompletedModule, Query, OngoingModule, Transaction
 from concurrent.futures import ThreadPoolExecutor
 from flask_cors import cross_origin
 from werkzeug.utils import secure_filename
@@ -1057,3 +1057,31 @@ def delete_info():
         db.session.delete(module)
         db.session.commit()
     return jsonify({"message": "An error occurred during evaluation"}), 200
+
+
+@users.route('/transaction', methods=['POST'])
+@cross_origin(supports_credentials=True)
+def record_transaction():
+    data = request.json
+    new_transaction = Transaction(
+        from_address=data['from'],
+        to_address=data['to'],
+        amount=data['amount']
+    )
+    db.session.add(new_transaction)
+    db.session.commit()
+    return jsonify({"message": "Transaction recorded successfully"}), 201
+
+@users.route('/transactions', methods=['GET'])
+@cross_origin(supports_credentials=True)
+def get_transactions():
+    transactions = Transaction.query.all()
+    return jsonify([
+        {
+            "id": t.id,
+            "from": t.from_address,
+            "to": t.to_address,
+            "amount": t.amount,
+            "timestamp": t.timestamp.isoformat()
+        } for t in transactions
+    ])

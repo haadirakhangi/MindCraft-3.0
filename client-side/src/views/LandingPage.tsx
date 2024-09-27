@@ -121,9 +121,9 @@ export default function SplitScreen() {
       <div className="absolute4">
         <div className="bg-shape1 bg-purple"></div>
       </div>
-      <Features/>
+      {/* <Features/> */}
       {/* <Pricing/> */}
-      <Testimonials/>
+      {/* <Testimonials/> */}
       <Footer />
     </div>
   );

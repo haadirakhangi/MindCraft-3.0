@@ -196,3 +196,10 @@ class PersonalizedModule(db.Model):
             'image_urls': self.image_urls,
             'video_urls': self.video_urls
         }
+
+class Transaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    from_address = db.Column(db.String(42), nullable=False)
+    to_address = db.Column(db.String(42), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())
