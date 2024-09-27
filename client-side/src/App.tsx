@@ -15,6 +15,7 @@ import CourseDetails from './views/CourseDetails';
 import "./views/i18n"
 import PersonalisedCourses from './views/PersonalisedCourses';
 import PerContent from './views/PerContent';
+import Payment from './views/Payement';
 
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
         <Route path="/content" element={<Content />} />
         <Route path="*" element={<Navigate to="/" />} />
         <Route path="/pers-courses" element={<PersonalisedCourses />} />
+        <Route path="/pay" element={<Payment />} />
       </Routes>
     </Router>
   );
