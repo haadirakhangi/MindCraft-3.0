@@ -25,6 +25,7 @@ from core.module_generator import ModuleGenerator
 from core.quiz_generator import QuizGenerator
 from core.pdf_generator import PdfGenerator
 from core.evaluator import Evaluator
+from core.recommendation_generator import RecommendationGenerator
 from server.utils import ServerUtils, AssistantUtils
 
 users = Blueprint(name='users', import_name=__name__)
@@ -53,6 +54,7 @@ SUB_MODULE_GENERATOR = SubModuleGenerator()
 CONTENT_GENERATOR = ContentGenerator()
 PDF_GENERATOR = PdfGenerator()
 QUIZ_GENERATOR = QuizGenerator()
+RECOMMENDATION_GENERATOR = RecommendationGenerator()
 EVALUATOR = Evaluator()
 AVAILABLE_TOOLS = {
     'get_context_from_page': AssistantUtils.get_page_context
@@ -217,8 +219,10 @@ def getuser():
 
         
     query_message = ""
-    user_queries = user.user_query_association        
-    return jsonify({"message": "User found", "query_message":query_message,"user_ongoing_modules":ongoing_modules, "user_completed_module":completed_modules, "response":True}), 200
+    user_queries = user.user_query_association   
+    recommended_modules = RECOMMENDATION_GENERATOR.generate_recommendations(user_course, user_interest, all_ongoing_modules_names) 
+    print(recommended_modules)    
+    return jsonify({"message": "User found", "query_message":query_message,"recommended_topics":recommended_modules,"user_ongoing_modules":ongoing_modules, "user_completed_module":completed_modules, "response":True}), 200
 
 # logout route
 @users.route('/logout', methods=['GET'])
@@ -633,7 +637,7 @@ def course_overview(module_id, source_language, websearch):
             print(submodules)
             keys_list = list(submodules.keys())
             future_images_list = executor.submit(SerperProvider.module_image_from_web, submodules)
-            future_video_list = executor.submit(SerperProvider.__class__module_videos_from_web, submodules)
+            future_video_list = executor.submit(SerperProvider.module_videos_from_web, submodules)
             submodules_split_one = {key: submodules[key] for key in keys_list[:3]}
             submodules_split_two = {key: submodules[key] for key in keys_list[3:]}
             future_content_one = executor.submit(CONTENT_GENERATOR.generate_content_from_web, submodules_split_one, module.module_name, 'first')
