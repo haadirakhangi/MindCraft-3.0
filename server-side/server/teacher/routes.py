@@ -222,10 +222,11 @@ def getuser():
 
     print("ALL ON GOING MODULES", all_ongoing_modules_names)  
     query_message = ""
-    user_queries = user.user_query_association   
-    if user_queries is None:
+    user_queries = user.user_query_association 
+    print("----------------------",user_queries)  
+    if len(user_queries) == 0:
         query_message = "You have not searched for any topic yet. Please search for a topic to get recommendations."
-        recommended_modules = RECOMMENDATION_GENERATOR.generate_recommendations_with_interests(user_course, user_interest, all_ongoing_modules_names) 
+        recommended_modules = RECOMMENDATION_GENERATOR.generate_recommendations_with_interests(user_course, user_interest) 
 
         return jsonify({"message": "User found", "query_message":query_message,"recommended_topics":recommended_modules, "user_ongoing_modules":ongoing_modules, "user_completed_module":completed_modules, "response":True}), 200
     else:
@@ -1079,29 +1080,22 @@ def delete_info():
     return jsonify({"message": "An error occurred during evaluation"}), 200
 
 
-@users.route('/transaction', methods=['POST'])
+@users.route('/api/transaction', methods=['POST'])
 @cross_origin(supports_credentials=True)
-def record_transaction():
+def store_transaction():
     data = request.json
     new_transaction = Transaction(
-        from_address=data['from'],
-        to_address=data['to'],
-        amount=data['amount']
+        wallet_address=data['address'],
+        balance=float(data['balance']),
+        transaction_type=data['transaction_type'],
+        amount=float(data['amount'])
     )
     db.session.add(new_transaction)
     db.session.commit()
-    return jsonify({"message": "Transaction recorded successfully"}), 201
+    return jsonify(new_transaction.to_dict()), 201
 
-@users.route('/transactions', methods=['GET'])
+@users.route('/api/transactions', methods=['GET'])
 @cross_origin(supports_credentials=True)
 def get_transactions():
-    transactions = Transaction.query.all()
-    return jsonify([
-        {
-            "id": t.id,
-            "from": t.from_address,
-            "to": t.to_address,
-            "amount": t.amount,
-            "timestamp": t.timestamp.isoformat()
-        } for t in transactions
-    ])
+    transactions = Transaction.query.order_by(Transaction.timestamp.desc()).all()
+    return jsonify([t.to_dict() for t in transactions])

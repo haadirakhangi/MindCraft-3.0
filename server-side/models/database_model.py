@@ -199,7 +199,18 @@ class PersonalizedModule(db.Model):
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    from_address = db.Column(db.String(42), nullable=False)
-    to_address = db.Column(db.String(42), nullable=False)
+    wallet_address = db.Column(db.String(36), nullable=False)
+    balance = db.Column(db.Float, nullable=False)
+    transaction_type = db.Column(db.String(10), nullable=False)  # 'deposit' or 'withdraw'
     amount = db.Column(db.Float, nullable=False)
-    timestamp = db.Column(db.DateTime, server_default=db.func.now())
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'wallet_address': self.wallet_address,
+            'balance': self.balance,
+            'transaction_type': self.transaction_type,
+            'amount': self.amount,
+            'timestamp': self.timestamp.isoformat()
+        }
