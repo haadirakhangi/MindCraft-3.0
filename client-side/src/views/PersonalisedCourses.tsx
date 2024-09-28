@@ -5,10 +5,10 @@ import Nav from '../components/navbar';
 import Footer from '../components/footer';
 import box from '../assets/images/box.gif';
 import axios from 'axios';
-import { UnorderedList, ListItem, Spinner, List } from "@chakra-ui/react";
+import { UnorderedList, ListItem, Spinner, List, IconButton } from "@chakra-ui/react";
 import { Editable, EditablePreview, EditableInput} from "@chakra-ui/react";
 import { useNavigate } from 'react-router-dom';
-
+import { CloseIcon } from '@chakra-ui/icons';
 
 const PersonalisedCourses = () => {
     const [text, setText] = useState('');
@@ -17,13 +17,19 @@ const PersonalisedCourses = () => {
     const [descriptionValue, setDescriptionValue] = useState('');
     const [submodules, setsubModules] = useState([]);
     const [isLoadingData, setIsLoadingData] = useState(false);
+    const [links, setLinks] = useState(['']); // Initial state with one empty input field
     const navigate = useNavigate();
 
     const sendDataToAPI = async (data) => {
         try {
             setIsLoadingData(true);
             // Make POST request to your Flask API route
-            const response = await axios.post('/api/query2/doc-upload', data);
+            const response = await axios.post('/api/query2/doc-upload', data,{
+                headers: {
+                    'Content-Type': 'multipart/form-data' // Specify that we are sending form data
+                }
+            }
+            );
             setsubModules(response.data.submodules)
             setIsLoadingData(false);
         } catch (error) {
@@ -55,12 +61,29 @@ const PersonalisedCourses = () => {
         setSelectedFile(e.target.files[0]);
     };
 
+    const handleLinkChange = (index, e) => {
+        const newLinks = [...links];
+        newLinks[index] = e.target.value;
+        setLinks(newLinks);
+    };
+
+    const addLink = () => {
+        setLinks([...links, '']); // Add an empty string to represent a new input field
+    };
+
+    const removeLink = (index) => {
+        const newLinks = links.filter((_, i) => i !== index);
+        setLinks(newLinks);
+    };
+
     const handleNextStep3 = () => {
         const formData = new FormData();
         formData.append('title', inputValue);
         formData.append('description', descriptionValue);
         formData.append('file', selectedFile);
-
+        formData.append('links', JSON.stringify(links)); // Convert links array to JSON
+        console.log("LINKS HAI", links)
+        console.log("LINKS HAI", JSON.stringify(links))
         // Send data to Flask route using Axios
         sendDataToAPI(formData);
     };
@@ -136,7 +159,6 @@ const PersonalisedCourses = () => {
                             height: '250px',
                             padding: '10px',
                             fontSize: '1.2em',
-                            color: '#999',
                             border: '1px solid #ddd',
                             borderRadius: '4px',
                             resize: 'none',
@@ -212,6 +234,30 @@ const PersonalisedCourses = () => {
                     {selectedFile && (
                         <Text mt={2}>Selected file: {selectedFile.name}</Text>
                     )}
+
+                    <Box width="100%" mt={4}>
+                        {links.map((link, index) => (
+                            <Flex key={index} mb={2} alignItems="center">
+                                <Input
+                                    placeholder={`Enter link ${index + 1}`}
+                                    value={link}
+                                    onChange={(e) => handleLinkChange(index, e)}
+                                    size="md"
+                                />
+                                <IconButton
+                                    ml={2}
+                                    size="sm"
+                                    colorScheme="red"
+                                    icon={<CloseIcon />}
+                                    onClick={() => removeLink(index)}
+                                    aria-label="Remove link"
+                                />
+                            </Flex>
+                        ))}
+                        <Button mt={2} colorScheme="blue" onClick={addLink}>
+                            Add Link
+                        </Button>
+                    </Box>
                 </Box>
 
                 <Text marginBottom={5}>Note: The time to write your course will increase if you have trained our AI with additional content</Text>
@@ -325,7 +371,6 @@ const PersonalisedCourses = () => {
                             ))}
                         </Stepper>
                     </Stack>
-
 
                     {steps[activeStep - 1]?.content}
                 </Flex>
