@@ -18,7 +18,8 @@ from werkzeug.utils import secure_filename
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader, ScrapflyLoader
+from langchain_community.document_loaders.merge import MergedDataLoader
 from api.openai_client import OpenAIProvider
 from api.serper_client import SerperProvider
 from core.submodule_generator import SubModuleGenerator
@@ -29,6 +30,7 @@ from core.pdf_generator import PdfGenerator
 from core.evaluator import Evaluator
 from core.recommendation_generator import RecommendationGenerator
 from server.utils import ServerUtils, AssistantUtils
+import json
 
 users = Blueprint(name='users', import_name=__name__)
 
@@ -426,7 +428,6 @@ def doc_query_topic(topicname,level,source_lang):
 @users.route('/query2/doc-upload',methods=['POST'])
 def personalized_module():
     user_id = session.get('user_id')
-    print(session.get('user_id'))
     if user_id is None:
         return jsonify({"message": "User not logged in", "response":False}), 401
     
@@ -436,22 +437,72 @@ def personalized_module():
         return jsonify({"message": "User not found", "response":False}), 404
     
     if 'file' not in request.files:
-        return 'No file part', 400
-    file = request.files['file']
-    if file.filename == '':
-        return 'No selected file', 400
+        file=None
+        # return 'No file part', 400
+    else:
+        file = request.files['file']
+    # if file.filename == '':
+    #     return 'No selected file', 400
     if not os.path.exists("uploads"):
         os.makedirs("uploads")
     if file:
         filename = secure_filename(file.filename)
         file.save(os.path.join("uploads", filename))
+    links = request.form.get('links')
+    print("LINKS---------------------", links) 
+    links_list = []
+    if links:
+        links_list = json.loads(links)
+    print("LINKS LIST", links_list)
     title = request.form['title']
     description = request.form['description']
     session['user_profile']=description
     session['title']=title
-    DOCS_PATH = os.path.join("uploads", filename)
-    loader = PyPDFLoader(DOCS_PATH)
-    docs = loader.load()
+    if file and len(links_list[0])>0:
+        print("BOTH------------")
+        DOCS_PATH = os.path.join("uploads", filename)
+        scrapfly_scrape_config = {
+            "asp": True,  # Bypass scraping blocking and antibot solutions, like Cloudflare
+            "render_js": True,  # Enable JavaScript rendering with a cloud headless browser
+            "proxy_pool": "public_residential_pool",  # Select a proxy pool (datacenter or residnetial)
+            "country": "us",  # Select a proxy location
+            "auto_scroll": True,  # Auto scroll the page
+            "js": "",  # Execute custom JavaScript code by the headless browser
+        }
+
+        scrapfly_loader = ScrapflyLoader(
+            links_list,
+            api_key=os.getenv("SCRAPFLY_API_KEY"),  # Get your API key from https://www.scrapfly.io/
+            continue_on_failure=True,  # Ignore unprocessable web pages and log their exceptions
+            scrape_config=scrapfly_scrape_config,  # Pass the scrape_config object
+            scrape_format="markdown",  # The scrape result format, either `markdown`(default) or `text`
+        )
+        pdf_loader = PyPDFLoader(DOCS_PATH)
+        loader_all = MergedDataLoader(loaders=[scrapfly_loader, pdf_loader])
+    elif file:
+        DOCS_PATH = os.path.join("uploads", filename)
+        print("FILE ONLY-------------------")
+        loader_all = PyPDFLoader(DOCS_PATH)
+    elif len(links_list[0])>0:
+        print("LINKS ONLY--------------")
+        scrapfly_scrape_config = {
+            "asp": True,  # Bypass scraping blocking and antibot solutions, like Cloudflare
+            "render_js": True,  # Enable JavaScript rendering with a cloud headless browser
+            "proxy_pool": "public_residential_pool",  # Select a proxy pool (datacenter or residnetial)
+            "country": "us",  # Select a proxy location
+            "auto_scroll": True,  # Auto scroll the page
+            "js": "",  # Execute custom JavaScript code by the headless browser
+        }
+
+        loader_all = ScrapflyLoader(
+            links_list,
+            api_key=os.getenv("SCRAPFLY_API_KEY"),  # Get your API key from https://www.scrapfly.io/
+            continue_on_failure=True,  # Ignore unprocessable web pages and log their exceptions
+            scrape_config=scrapfly_scrape_config,  # Pass the scrape_config object
+            scrape_format="markdown",  # The scrape result format, either `markdown`(default) or `text`
+        )
+
+    docs = loader_all.load()
     docs_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     split_docs = docs_splitter.split_documents(docs)
     TEXTBOOK_VECTORSTORE = FAISS.from_documents(split_docs, EMBEDDINGS)
@@ -461,8 +512,8 @@ def personalized_module():
     submodules = SUB_MODULE_GENERATOR.generate_submodules_from_textbook(title,VECTORDB_TEXTBOOK)
     values_list = list(submodules.values())
     session['submodules']=submodules
-    return jsonify({"message": "Query successful","submodules":values_list,"response":True}), 200
 
+    return jsonify({"message": "Query successful","submodules":values_list,"response":True}), 200
 @users.route('/query2/doc_generate_content',methods=['GET'])
 def personalized_module_content():
     user_id = session.get("user_id", None)
