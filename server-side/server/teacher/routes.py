@@ -8,6 +8,7 @@ from datetime import datetime
 from gtts import gTTS
 from sqlalchemy import desc
 from deep_translator import GoogleTranslator
+from langchain_openai import OpenAIEmbeddings
 from lingua import LanguageDetectorBuilder
 from flask import request, session, jsonify, send_file, Blueprint
 from models.database_model import User, Topic, Module, CompletedModule, Query, OngoingModule, Transaction
@@ -34,11 +35,13 @@ users = Blueprint(name='users', import_name=__name__)
 device_type = 'cpu'
 embedding_model_name = "BAAI/bge-small-en-v1.5"
 encode_kwargs = {'normalize_embeddings': True} # set True to compute cosine similarity
-EMBEDDINGS = HuggingFaceBgeEmbeddings(
-                model_name=embedding_model_name,
-                model_kwargs={'device': device_type },
-                encode_kwargs=encode_kwargs
-            )
+# EMBEDDINGS = HuggingFaceBgeEmbeddings(
+#                 model_name=embedding_model_name,
+#                 model_kwargs={'device': device_type },
+#                 encode_kwargs=encode_kwargs
+#             )
+
+EMBEDDINGS = OpenAIEmbeddings(api_key=os.getenv("EMBEDDING_KEY"), model='text-embedding-3-small')
 LANG_DETECTOR = LanguageDetectorBuilder.from_all_languages().with_preloaded_language_models().build()
 OPENAI_CLIENT = OpenAIProvider()
 TOOLS = [
@@ -494,13 +497,14 @@ def personalized_module_content():
         submodules_split_three = {key: submodules[key] for key in keys_list[4:]}
         future_content_one = executor.submit(ContentGenerator().generate_content_from_textbook,title ,submodules_split_one,description,VECTORDB_TEXTBOOK,'first')
         future_content_two = executor.submit(ContentGenerator().generate_content_from_textbook,title ,submodules_split_two,description,VECTORDB_TEXTBOOK,'second')
-        future_content_two = executor.submit(ContentGenerator().generate_content_from_textbook,title ,submodules_split_three,description,VECTORDB_TEXTBOOK,'second')
+        future_content_three = executor.submit(ContentGenerator().generate_content_from_textbook,title ,submodules_split_three,description,VECTORDB_TEXTBOOK,'third')
 
     # Retrieve the results when both functions are done
     content_one = future_content_one.result()
     content_two = future_content_two.result()
+    content_three = future_content_three.result()
 
-    content = content_one + content_two
+    content = content_one + content_two + content_three
     images_list = future_images_list.result()
     video_list = future_video_list.result()
 
