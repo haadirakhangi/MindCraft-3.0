@@ -1,95 +1,241 @@
 import React, { useState, useEffect } from 'react';
-import Web3 from 'web3';
+import { BeaconWallet } from "@taquito/beacon-wallet";
+import { NetworkType } from "@airgap/beacon-types";
+import { TezosToolkit } from "@taquito/taquito";
+import axios from 'axios';
 
-const PaymentComponent = () => {
-  const [web3, setWeb3] = useState(null);
-  const [account, setAccount] = useState('');
-  const [balance, setBalance] = useState('');
-  const [amount, setAmount] = useState('');
+interface Transaction {
+  id: number;
+  wallet_address: string;
+  balance: number;
+  timestamp: string;
+}
+
+const App: React.FC = () => {
+  const rpcUrl = "https://ghostnet.ecadinfra.com";
+  const Tezos = new TezosToolkit(rpcUrl);
+  const contractAddress = "KT1R4i4qEaxF7v3zg1M8nTeyrqk8JFmdGLuu";
+
+  const [wallet, setWallet] = useState<BeaconWallet | undefined>(undefined);
+  const [address, setAddress] = useState<string | undefined>(undefined);
+  const [balance, setBalance] = useState<string | undefined>(undefined);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  const [depositAmount, setDepositAmount] = useState<number>(1);
+  const [depositButtonActive, setDepositButtonActive] = useState<boolean>(false);
+  const [depositButtonLabel, setDepositButtonLabel] = useState<string>("Deposit");
+
+  const [withdrawButtonActive, setWithdrawButtonActive] = useState<boolean>(true);
+  const [withdrawButtonLabel, setWithdrawButtonLabel] = useState<string>("Withdraw");
 
   useEffect(() => {
-    const initWeb3 = async () => {
-      if (window.ethereum) {
-        const web3Instance = new Web3(window.ethereum);
-        try {
-          // Request account access
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-          setWeb3(web3Instance);
-        } catch (error) {
-          console.error("User denied account access");
-        }
-      }
-      else if (window.web3) {
-        setWeb3(new Web3(window.web3.currentProvider));
-      }
-      else {
-        console.log('No web3? You should consider trying MetaMask!');
-      }
-    };
-
-    initWeb3();
+    fetchTransactions();
   }, []);
 
-  useEffect(() => {
-    const getAccountInfo = async () => {
-      if (web3) {
-        const accounts = await web3.eth.getAccounts();
-        setAccount(accounts[0]);
-        const balance = await web3.eth.getBalance(accounts[0]);
-        setBalance(web3.utils.fromWei(balance, 'ether'));
-      }
-    };
+  const connectWallet = async () => {
+    const newWallet = new BeaconWallet({
+      name: "Simple dApp tutorial",
+      network: {
+        type: NetworkType.GHOSTNET,
+      },
+    });
+    await newWallet.requestPermissions();
+    const userAddress = await newWallet.getPKH();
+    setAddress(userAddress);
+    await getWalletBalance(userAddress);
+    setWallet(newWallet);
+    setDepositButtonActive(true);
+  };
 
-    getAccountInfo();
-  }, [web3]);
-
-  const handlePayment = async () => {
-    if (!web3 || !account) {
-      alert('Please connect to MetaMask first.');
-      return;
-    }
-
-    try {
-      const amountInWei = web3.utils.toWei(amount, 'ether');
-      const gasPrice = await web3.eth.getGasPrice();
-      const gasLimit = 21000; // Standard gas limit for a simple transaction
-
-      const tx = await web3.eth.sendTransaction({
-        from: account,
-        to: '0xFBaE2615B1937B25aD10CDd7277F4ADAD9Ca0049', // Replace with your recipient address
-        value: amountInWei,
-        gasPrice: gasPrice,
-        gas: gasLimit,
-      });
-
-      console.log('Transaction successful:', tx);
-      alert('Payment successful!');
-    } catch (error) {
-      console.error('Payment failed:', error);
-      alert('Payment failed. Please check the console for details.');
+  const disconnectWallet = () => {
+    if (wallet) {
+      wallet.client.clearActiveAccount();
+      setWallet(undefined);
+      setAddress(undefined);
+      setBalance(undefined);
+      setDepositButtonActive(false);
     }
   };
 
+  const getWalletBalance = async (walletAddress: string) => {
+    const balanceMutez = await Tezos.tz.getBalance(walletAddress);
+    const balanceTez = balanceMutez.div(1000000).toFormat(2);
+    setBalance(balanceTez);
+    await storeTransaction(walletAddress, balanceTez);
+  };
+
+  const storeTransaction = async (walletAddress: string, balance: string) => {
+    try {
+      await axios.post('http://localhost:5000/api/transaction', {
+        address: walletAddress,
+        balance: balance
+      });
+      await fetchTransactions();
+    } catch (error) {
+      console.error('Error storing transaction:', error);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/transactions');
+      setTransactions(response.data);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+    }
+  };
+
+  const deposit = async () => {
+    setDepositButtonActive(false);
+    setDepositButtonLabel("Depositing...");
+
+    if (wallet) {
+      Tezos.setWalletProvider(wallet);
+      const contract = await Tezos.wallet.at(contractAddress);
+
+      try {
+        const transactionParams = await contract.methods
+          .deposit()
+          .toTransferParams({
+            amount: depositAmount,
+          });
+        const estimate = await Tezos.estimate.transfer(transactionParams);
+
+        const operation = await Tezos.wallet
+          .transfer({
+            ...transactionParams,
+            ...estimate,
+          })
+          .send();
+
+        console.log(`Waiting for ${operation.opHash} to be confirmed...`);
+
+        await operation.confirmation(2);
+
+        console.log(
+          `Operation injected: https://ghost.tzstats.com/${operation.opHash}`
+        );
+
+        if (address) {
+          await getWalletBalance(address);
+        }
+      } catch (error) {
+        console.error("Error during deposit:", error);
+      }
+    }
+
+    setDepositButtonActive(true);
+    setDepositButtonLabel("Deposit");
+  };
+
+  const withdraw = async () => {
+    setWithdrawButtonActive(false);
+    setWithdrawButtonLabel("Withdrawing...");
+
+    if (wallet) {
+      Tezos.setWalletProvider(wallet);
+      const contract = await Tezos.wallet.at(contractAddress);
+
+      try {
+        const transactionParams = await contract.methods
+          .withdraw()
+          .toTransferParams();
+        const estimate = await Tezos.estimate.transfer(transactionParams);
+
+        const operation = await Tezos.wallet
+          .transfer({
+            ...transactionParams,
+            ...estimate,
+          })
+          .send();
+
+        console.log(`Waiting for ${operation.opHash} to be confirmed...`);
+
+        await operation.confirmation(2);
+
+        console.log(
+          `Operation injected: https://ghost.tzstats.com/${operation.opHash}`
+        );
+
+        if (address) {
+          await getWalletBalance(address);
+        }
+      } catch (error) {
+        console.error("Error during withdrawal:", error);
+      }
+    }
+
+    setWithdrawButtonActive(true);
+    setWithdrawButtonLabel("Withdraw");
+  };
+
   return (
-    <div>
-      <h1>MetaMask Polygon Payment</h1>
-      {account ? (
-        <div>
-          <p>Connected Account: {account}</p>
-          <p>Balance: {balance} MATIC</p>
-          <input
-            type="text"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Amount in MATIC"
-          />
-          <button onClick={handlePayment}>Send Payment</button>
-        </div>
-      ) : (
-        <p>Please connect to MetaMask</p>
-      )}
-    </div>
+    <main>
+      <h1>Tezos bank dApp</h1>
+
+      <div className="card">
+        {wallet ? (
+          <>
+            <p>The address of the connected wallet is {address}.</p>
+            <p>Its balance in tez is {balance}.</p>
+            <p>
+              To get tez, go to <a
+                href="https://faucet.ghostnet.teztnets.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                https://faucet.ghostnet.teztnets.com/
+              </a>.
+            </p>
+            <p>
+              Deposit tez:
+              <input
+                type="number"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(Number(e.target.value))}
+                min="1"
+                max="100"
+              />
+              <input
+                type="range"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(Number(e.target.value))}
+                min="1"
+                max="100"
+              />
+              <button onClick={deposit} disabled={!depositButtonActive}>
+                {depositButtonLabel}
+              </button>
+            </p>
+            <p>
+              Withdraw tez:
+              <button onClick={withdraw} disabled={!withdrawButtonActive}>
+                {withdrawButtonLabel}
+              </button>
+            </p>
+            <p>
+              <button onClick={disconnectWallet}>Disconnect wallet</button>
+            </p>
+          </>
+        ) : (
+          <button onClick={connectWallet}>Connect wallet</button>
+        )}
+      </div>
+
+      <div className="transactions">
+        <h2>Recent Transactions</h2>
+        <ul>
+          {transactions.map(transaction => (
+            <li key={transaction.id}>
+              Address: {transaction.wallet_address}, 
+              Balance: {transaction.balance} tez, 
+              Time: {new Date(transaction.timestamp).toLocaleString()}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </main>
   );
 };
 
-export default PaymentComponent;
+export default App;
