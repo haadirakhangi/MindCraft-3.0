@@ -7,7 +7,7 @@ from serpapi import GoogleSearch
 load_dotenv()
 serper_api_key = os.getenv('SERPER_API_KEY')
 google_serp_api_key = os.getenv('GOOGLE_SERP_API_KEY')
-# print("GOOGLE SERP API KEY", google_serp_api_key)
+print("GOOGLE SERP API KEY", google_serp_api_key)
 
 class SerperProvider:
     @staticmethod

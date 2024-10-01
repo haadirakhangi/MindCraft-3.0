@@ -21,6 +21,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, ScrapflyLoader
 from langchain_community.document_loaders.merge import MergedDataLoader
 from api.openai_client import OpenAIProvider
+from api.gemini_client import GeminiProvider
 from api.serper_client import SerperProvider
 from core.submodule_generator import SubModuleGenerator
 from core.content_generator import ContentGenerator
@@ -45,7 +46,7 @@ encode_kwargs = {'normalize_embeddings': True} # set True to compute cosine simi
 
 EMBEDDINGS = OpenAIEmbeddings(api_key=os.getenv("EMBEDDING_KEY"), model='text-embedding-3-small')
 LANG_DETECTOR = LanguageDetectorBuilder.from_all_languages().with_preloaded_language_models().build()
-OPENAI_CLIENT = OpenAIProvider()
+OPENAI_CLIENT = GeminiProvider()
 TOOLS = [
     {
         'type': 'function',
@@ -543,7 +544,7 @@ def personalized_module_content():
         submodules = session['submodules']
         keys_list = list(submodules.keys())
         future_images_list = executor.submit(SerperProvider.module_image_from_web, submodules)
-        future_video_list = executor.submit(SerperProvider.module_videos_from_web, submodules)
+        # future_video_list = executor.submit(SerperProvider.module_videos_from_web, submodules)
         submodules_split_one = {key: submodules[key] for key in keys_list[:2]}
         submodules_split_two = {key: submodules[key] for key in keys_list[2:4]}
         submodules_split_three = {key: submodules[key] for key in keys_list[4:]}
@@ -558,7 +559,7 @@ def personalized_module_content():
 
     content = content_one + content_two + content_three
     images_list = future_images_list.result()
-    video_list = future_video_list.result()
+    # video_list = future_video_list.result()
 
     # new_module.submodule_content = content
     # new_module.image_urls = images_list
@@ -573,7 +574,7 @@ def personalized_module_content():
     trans_submodule_content = ServerUtils.translate_submodule_content(content, source_language)
     print(f"Translated submodule content: {trans_submodule_content}")
     
-    return jsonify({"message": "Query successful", "images": images_list,"videos": video_list, "content": trans_submodule_content, "response": True}), 200
+    return jsonify({"message": "Query successful", "images": images_list,"content": trans_submodule_content, "response": True}), 200
 
 # query route --> if websearch is true then fetch from web and feed into model else directly feed into model
 # save frequently searched queries in database for faster retrieval

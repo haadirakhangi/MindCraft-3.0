@@ -27,3 +27,4 @@ faiss-cpu
 pypdf
 google-generativeai
 langchain-community
+scrapfly-sdk
