@@ -1,16 +1,16 @@
-from api.openai_client import OpenAIProvider
+from api.gemini_client import GeminiProvider
 from api.tavily_client import TavilyProvider
 
 class SubModuleGenerator:
     def __init__(self):
-        self.openai_client = OpenAIProvider()
+        self.gemini_client = GeminiProvider()
         self.tavily_client = TavilyProvider()
 
     def generate_submodules(self, module_name):
         prompt_submodules = """You are an educational assistant having knowledge in various domains. You will be provided with a module name and your task is to generate six 'Sub-Modules' names that are related to the module. The output should be in json format where each key corresponds to the sub-module number and the values are the sub-module names.
     Module Name: {module_name}
     """
-        output = self.openai_client.generate_json_response(prompt_submodules.format(module_name = module_name))
+        output = self.gemini_client.generate_json_response(prompt_submodules.format(module_name = module_name))
         return output
     
     def generate_submodules_from_web(self, module_name, summary):
@@ -26,7 +26,7 @@ class SubModuleGenerator:
     Follow the provided JSON format diligently.
         """
 
-        output = self.openai_client.generate_json_response(sub_module_generation_prompt.format(module_name = module_name, search_result = search_result))
+        output = self.gemini_client.generate_json_response(sub_module_generation_prompt.format(module_name = module_name, search_result = search_result))
         return output
     
     def generate_submodules_from_textbook(self, topic, vectordb):
@@ -41,5 +41,5 @@ class SubModuleGenerator:
 
         Follow the provided JSON format diligently."""
 
-        output = self.openai_client.generate_json_response(module_generation_prompt.format(topic= topic, context = context))
+        output = self.gemini_client.generate_json_response(module_generation_prompt.format(topic= topic, context = context))
         return output

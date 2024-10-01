@@ -20,7 +20,6 @@ from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, ScrapflyLoader
 from langchain_community.document_loaders.merge import MergedDataLoader
-from api.openai_client import OpenAIProvider
 from api.gemini_client import GeminiProvider
 from api.serper_client import SerperProvider
 from core.submodule_generator import SubModuleGenerator
@@ -46,16 +45,8 @@ encode_kwargs = {'normalize_embeddings': True} # set True to compute cosine simi
 
 EMBEDDINGS = OpenAIEmbeddings(api_key=os.getenv("EMBEDDING_KEY"), model='text-embedding-3-small')
 LANG_DETECTOR = LanguageDetectorBuilder.from_all_languages().with_preloaded_language_models().build()
-OPENAI_CLIENT = GeminiProvider()
-TOOLS = [
-    {
-        'type': 'function',
-        'function': {
-            'name': 'get_context_from_page',
-            'description': "Get information about the current page that the user is exploring. Used to answer user queries related to the current page they're exploring.",
-            }
-    }
-]
+GEMINI_CLIENT = GeminiProvider()
+TOOLS = [AssistantUtils.get_page_context]
 MODULE_GENERATOR = ModuleGenerator()
 SUB_MODULE_GENERATOR = SubModuleGenerator()
 CONTENT_GENERATOR = ContentGenerator()
@@ -124,10 +115,9 @@ def login():
     print("Profile",profile)
 
     # create assistant for user
-    assistant, thread = OPENAI_CLIENT.initialize_assistant_and_thread(profile= profile, tools=TOOLS)
-    session['thread_id'] = thread.id
-    session['assistant_id'] = assistant.id
+    assistant = GEMINI_CLIENT.initialize_assistant(profile= profile, tools=TOOLS)
     return jsonify({"message": "User logged in successfully", "email":user.email, "response":True}), 200
+
 
 
 @users.route('/user_profile', methods=['GET', 'POST'])
@@ -1018,35 +1008,46 @@ def chatbot_route():
             trans_query = GoogleTranslator(source=source_language, target='en').translate(query)
         else:
             trans_query = query
-        assistant_id = session['assistant_id']
-        print('ASSISTANT ID', assistant_id)
-        thread_id = session['thread_id']
-        print('THREAD ID', thread_id)
         print(trans_query)
-        message, run = OPENAI_CLIENT.create_assistant_message_and_run(thread_id, trans_query)
+        chat = GEMINI_CLIENT.return_chat()
+        response = chat.send_message(trans_query)
+        print(response)
+        response_text = response.text  # Assuming response.text is a string
         
-        if run.status == 'failed':
-            print(run.error)
-        elif run.status == 'requires_action':
-            run = OPENAI_CLIENT.submit_tool_outputs(thread_id, run.id, run.required_action.submit_tool_outputs.tool_calls, AVAILABLE_TOOLS)
-            
-        messages = OPENAI_CLIENT.list_assistant_messages(thread_id=thread_id)
-        print('message',messages)
-        content = None
-        for thread_message in messages.data:
-            content = thread_message.content
-        print("Content List", content)
-        if len(tool_check) == 0:
-            chatbot_reply = content[0].text.value
-            print("Chatbot reply",chatbot_reply)
-            if source_language != 'en':
-                trans_output = GoogleTranslator(source='auto', target=source_language).translate(chatbot_reply)
-            else:
-                trans_output = chatbot_reply
-            response = {'chatbotResponse': trans_output,'function_name': 'normal_search'}
-        return jsonify(response)
+        # Translate the response back if necessary
+        if source_language != 'en':
+            trans_output = GoogleTranslator(source='auto', target=source_language).translate(response_text)
+        else:
+            trans_output = response_text
+        
+        # Return a JSON response
+        return jsonify({'chatbotResponse': trans_output, 'function_name': 'normal_search'})
+    
     else:
         return jsonify({'error': 'User message not provided'}), 400
+    
+        # if run.status == 'failed':
+        #     print(run.error)
+        # elif run.status == 'requires_action':
+        #     run = GEMINI_CLIENT.submit_tool_outputs(thread_id, run.id, run.required_action.submit_tool_outputs.tool_calls, AVAILABLE_TOOLS)
+            
+    #     messages = GEMINI_CLIENT.list_assistant_messages(thread_id=thread_id)
+    #     print('message',messages)
+    #     content = None
+    #     for thread_message in messages.data:
+    #         content = thread_message.content
+    #     print("Content List", content)
+    #     if len(tool_check) == 0:
+    #         chatbot_reply = content[0].text.value
+    #         print("Chatbot reply",chatbot_reply)
+    #         if source_language != 'en':
+    #             trans_output = GoogleTranslator(source='auto', target=source_language).translate(chatbot_reply)
+    #         else:
+    #             trans_output = chatbot_reply
+    #         response = {'chatbotResponse': trans_output,'function_name': 'normal_search'}
+    #     return jsonify(response)
+    # else:
+    #     return jsonify({'error': 'User message not provided'}), 400
     
 @users.route('/query2/voice-save', methods=['POST'])
 @cross_origin(supports_credentials=True)

@@ -1,4 +1,4 @@
-from api.openai_client import OpenAIProvider
+from api.gemini_client import GeminiProvider
 from models.database_model import Module
 import pandas as pd
 import numpy as np
@@ -10,7 +10,7 @@ import csv
 
 class RecommendationGenerator:
     def __init__(self):
-        self.openai_client = OpenAIProvider()
+        self.gemini_client = GeminiProvider()
         self.current_dir = os.path.dirname(__file__)
         self.data_dir = os.path.join(self.current_dir, 'recommendation_data', 'modules.csv')
         self.df_module = pd.read_csv(self.data_dir)
@@ -30,7 +30,7 @@ class RecommendationGenerator:
         ```
         '''
         
-        output = self.openai_client.generate_json_response(recc_prompt.format(user_course = user_course, user_interest=user_interest))
+        output = self.gemini_client.generate_json_response(recc_prompt.format(user_course = user_course, user_interest=user_interest))
         return output
     
     def generate_recommendations_with_summary(self, module_summary, top_n=5):

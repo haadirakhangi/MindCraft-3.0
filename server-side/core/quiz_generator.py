@@ -1,9 +1,9 @@
-from api.openai_client import OpenAIProvider
+from api.gemini_client import GeminiProvider
 from api.tavily_client import TavilyProvider
 
 class QuizGenerator:
     def __init__(self):
-        self.openai_client = OpenAIProvider()
+        self.gemini_client = GeminiProvider()
         self.tavily_client = TavilyProvider()
 
     def generate_quiz(self, sub_modules):
@@ -26,7 +26,7 @@ class QuizGenerator:
     ```
     """
         
-        output = self.openai_client.generate_json_response(quiz_prompt.format(sub_modules = sub_modules))
+        output = self.gemini_client.generate_json_response(quiz_prompt.format(sub_modules = sub_modules))
         return output
     
     def generate_quiz_from_web(self, sub_modules):
@@ -56,7 +56,7 @@ class QuizGenerator:
 
     """
         
-        output = self.openai_client.generate_json_response(quiz_prompt_for_web.format(sub_modules = sub_modules, search_result = search_result))
+        output = self.gemini_client.generate_json_response(quiz_prompt_for_web.format(sub_modules = sub_modules, search_result = search_result))
         return output
     
     def generate_applied_quiz(self, sub_modules):
@@ -75,7 +75,7 @@ class QuizGenerator:
     Sub Modules : {sub_modules}
     """
         
-        output = self.openai_client.generate_json_response(quiz_prompt.format(sub_modules = sub_modules))
+        output = self.gemini_client.generate_json_response(quiz_prompt.format(sub_modules = sub_modules))
         return output
 
     def generate_applied_quiz_from_web(self, sub_modules):
@@ -103,7 +103,7 @@ class QuizGenerator:
     Create a set of 10 questions that follow the described manner and the above-mentioned format.
     """
 
-        output = self.openai_client.generate_json_response(quiz_prompt_for_web.format(sub_modules = sub_modules, search_result = search_result))
+        output = self.gemini_client.generate_json_response(quiz_prompt_for_web.format(sub_modules = sub_modules, search_result = search_result))
         return output
 
     def generate_conversation_quiz(self, sub_modules):
@@ -115,7 +115,7 @@ class QuizGenerator:
     ```
     """
 
-        output = self.openai_client.generate_json_response(quiz_prompt.format(sub_modules = sub_modules))
+        output = self.gemini_client.generate_json_response(quiz_prompt.format(sub_modules = sub_modules))
         output_list = list(output.values())
         return output_list
 
@@ -133,6 +133,6 @@ class QuizGenerator:
 
     """
         
-        output = self.openai_client.generate_json_response(quiz_prompt.format(sub_modules = sub_modules, search_result = search_result))
+        output = self.gemini_client.generate_json_response(quiz_prompt.format(sub_modules = sub_modules, search_result = search_result))
         output_list = list(output.values())
         return output_list
