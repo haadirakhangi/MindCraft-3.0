@@ -82,8 +82,6 @@ const PersonalisedCourses = () => {
         formData.append('description', descriptionValue);
         formData.append('file', selectedFile);
         formData.append('links', JSON.stringify(links)); // Convert links array to JSON
-        console.log("LINKS HAI", links)
-        console.log("LINKS HAI", JSON.stringify(links))
         // Send data to Flask route using Axios
         sendDataToAPI(formData);
     };

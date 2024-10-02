@@ -355,7 +355,7 @@ def doc_query_topic(topicname,level,source_lang):
     docs_path = os.path.join("uploads", filename)
     loader = PyPDFLoader(docs_path)
     docs = loader.load()
-    docs_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    docs_splitter = RecursiveCharacterTextSplitter(chunk_size=700, chunk_overlap=150)
     split_docs = docs_splitter.split_documents(docs)
     TEXTBOOK_VECTORSTORE = FAISS.from_documents(split_docs, EMBEDDINGS)
     TEXTBOOK_VECTORSTORE.save_local('teacher_docs')

@@ -397,18 +397,23 @@ const ContentSec = ({ subject, isLoading, images, index, data_len, quiz, quiz2, 
             allowfullscreen
           ></iframe> */}
           <List mb={5}>
-            {Array.isArray(videos[index]) ? (
-              videos[index].map((url, index) => (
-                <ListItem key={index}>
-                  <Link fontSize={20} href={url} isExternal color={useColorModeValue('purple.600', 'gray.500')}>
-                    {url}
-                  </Link>
-                </ListItem>
-              ))
+            {Array.isArray(videos) && Array.isArray(videos[index]) ? (
+              videos[index].length > 0 ? (
+                videos[index].map((url, idx) => (
+                  <ListItem key={idx}>
+                    <Link fontSize={20} href={url} isExternal color={useColorModeValue('purple.600', 'gray.500')}>
+                      {url}
+                    </Link>
+                  </ListItem>
+                ))
+              ) : (
+                <Text>No Links available</Text>
+              )
             ) : (
               <Text>No Links available</Text>
             )}
           </List>
+
 
           <Text fontSize="3xl" className='feature-heading'>{trans('Want to Learn Offline? Download the whole Course here:')}</Text>
           <Button
