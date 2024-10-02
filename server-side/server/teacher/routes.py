@@ -8,7 +8,7 @@ from datetime import datetime
 from gtts import gTTS
 from sqlalchemy import desc
 from deep_translator import GoogleTranslator
-from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from lingua import LanguageDetectorBuilder
 from flask import request, session, jsonify, send_file, Blueprint
 from models.database_model import User, Topic, Module, CompletedModule, Query, OngoingModule, Transaction
@@ -43,7 +43,7 @@ encode_kwargs = {'normalize_embeddings': True} # set True to compute cosine simi
 #                 encode_kwargs=encode_kwargs
 #             )
 
-EMBEDDINGS = OpenAIEmbeddings(api_key=os.getenv("EMBEDDING_KEY"), model='text-embedding-3-small')
+EMBEDDINGS = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 LANG_DETECTOR = LanguageDetectorBuilder.from_all_languages().with_preloaded_language_models().build()
 GEMINI_CLIENT = GeminiProvider()
 TOOLS = [AssistantUtils.get_page_context]

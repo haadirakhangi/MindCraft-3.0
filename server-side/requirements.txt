@@ -28,3 +28,4 @@ pypdf
 google-generativeai
 langchain-community
 scrapfly-sdk
+langchain-google-genai
