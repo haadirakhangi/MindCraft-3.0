@@ -1,6 +1,6 @@
 # MINDCRAFT
 
-# Client Project Setup Guide
+# Project Setup Guide
 
 This guide will walk you through the process of setting up your client project. Please follow the steps below:
 
