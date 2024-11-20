@@ -1,3 +1,5 @@
+# MINDCRAFT
+
 # Client Project Setup Guide
 
 This guide will walk you through the process of setting up your client project. Please follow the steps below:
@@ -74,18 +76,17 @@ This guide will walk you through the process of setting up your client project. 
 
     ```plaintext
     GOOGLE_SERP_API_KEY = 'YOUR_GOOGLE_SERP_API_KEY'
-    SERPER_API_KEY1 = 'YOUR_SERPER_API_KEY1'
-    SERPER_API_KEY2 = 'YOUR_SERPER_API_KEY2'
+    SERPER_API_KEY = 'YOUR_SERPER_API_KEY'
     TAVILY_API_KEY1 = 'YOUR_TAVILY_API_KEY1'
     TAVILY_API_KEY2 = 'YOUR_TAVILY_API_KEY2'
     TAVILY_API_KEY3 = 'YOUR_TAVILY_API_KEY3'
     GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY'
-    EMBEDDING_KEY = 'YOUR_OPENAI_KEY'
+    EMBEDDING_KEY = 'YOUR_GEMINI_API_KEY'
     SCRAPFLY_API_KEY = 'YOUR_SCRAPFLY_API_KEY'
     SECRET_KEY = 'YOUR_SECRET_KEY'
     ```
 
-    Replace `YOUR_GOOGLE_SERP_API_KEY`, `YOUR_SERPER_API_KEY1`, `YOUR_SERPER_API_KEY2`, `YOUR_TAVILY_API_KEY1`, `YOUR_TAVILY_API_KEY2`, `YOUR_TAVILY_API_KEY3`, `YOUR_GOOGLE_API_KEY1`, `YOUR_GOOGLE_API_KEY2`, `YOUR_GOOGLE_API_KEY3`, and `YOUR_SECRET_KEY` with your actual API keys and secret key.
+    Replace `YOUR_GOOGLE_SERP_API_KEY`, `YOUR_SERPER_API_KEY`, `YOUR_TAVILY_API_KEY1`, `YOUR_TAVILY_API_KEY2`, `YOUR_TAVILY_API_KEY3`, `YOUR_GEMINI_API_KEY`, `YOUR_GEMINI_API_KEY`, `YOUR_SCRAPFLY_API_KEY`, and `YOUR_SECRET_KEY` with your actual API keys and secret key.
 
 10. **Run Flask Server:**
 
