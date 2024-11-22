@@ -7,6 +7,35 @@ As a result, many students are unable to access or afford high-quality education
 
 To address these issues, we have developed MindCraft, an AI-driven platform that aims to democratize education by generating on-demand, personalized, and multilingual courses across a wide range of subjects, making quality education accessible to all, regardless of economic or linguistic barriers.
 
+# Key Features
+Education Content Generation using Generative AI:
+
+Hierarchical Structure: The content is organized into basic and advanced modules, with sub-modules that include introductions, definitions, examples, real-life applications, and additional resources.
+Adaptive Learning Paths: Personalized courses are generated based on the user's learning preferences, pace, and goals.
+Audio Support: Audio versions of the content are available for users with reading challenges, enhancing accessibility.
+Downloadable Content: Users can download content in PDF format for offline access and quick revisions.
+Content on Latest Topics Using Web Context:
+
+Real-Time Integration: MindCraft overcomes the limitations of static-gen AI models by fetching real-time information from the web, ensuring content is always current and relevant.
+Contextual Learning: By incorporating the latest trends and data, MindCraft provides users with the most up-to-date knowledge on any topic.
+Multilingual Support:
+
+Automatic Language Recognition: The platform automatically detects the user's preferred language and generates content accordingly.
+Inclusive Learning: Users can search for and generate content in multiple languages, including English, Spanish, and Mandarin, making education accessible to a global audience.
+ISAAC (Intelligent System for Academic Assistance and Coaching):
+
+Virtual Assistant: ISAAC is available on every page except the quiz page, guides users, answers questions, and offers personalized recommendations.
+Simplified Content: ISAAC can simplify complex content and deliver it in the user's native language, enhancing understanding and engagement.
+Recommendation System:
+
+Personalized Learning Experience: The system collects unique user information to provide personalized content recommendations.
+Dynamic Updates: Recommendations are regularly updated based on the user’s learning progress and interests.
+AI-Powered Quizzes:
+
+Comprehensive Evaluation: The platform offers three types of quizzes—assessing theoretical, application-based, and conceptual knowledge—with evaluations based on accuracy, completeness, and other factors using Generative AI.
+AI Conversational Test: Includes text-to-speech questions and analyzes responses in any language, providing a diverse and inclusive assessment method.
+
+
 # Project Setup Guide
 
 This guide will walk you through the process of setting up your client project. Please follow the steps below:
